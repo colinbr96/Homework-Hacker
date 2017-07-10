@@ -7,26 +7,31 @@ import pickle
 ################################################################################
 # Globals
 
-DEFAULT_CONFIG = {
-    "courses": [],
-    "assignments": []
+DEFAULT_DB = {
+    'courses': [],
+    'assignments': []
 }
 
-CONFIG_FILENAME = "config.hwmngr"
+DB_FILENAME = 'db.hwmngr'
 
 
 ################################################################################
 # Primary Functions
 
 def save_new() -> dict:
-    with open(CONFIG_FILENAME, "wb") as handle:
-        pickle.dump(DEFAULT_CONFIG, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    return DEFAULT_CONFIG
+    with open(DB_FILENAME, 'wb') as handle:
+        pickle.dump(DEFAULT_DB, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    return DEFAULT_DB
+
+
+def save(db_data: dict):
+    with open(DB_FILENAME, 'wb') as handle:
+        pickle.dump(db_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def load() -> dict:
     try:
-        with open(CONFIG_FILENAME, "rb") as handle:
+        with open(DB_FILENAME, 'rb') as handle:
             return pickle.load(handle)
     except FileNotFoundError:
         return {}

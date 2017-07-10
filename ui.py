@@ -2,89 +2,97 @@
 # Imports
 
 import sys
-import config
+import database
 
 
 ################################################################################
 # Globals
 
-VERSION = "Dev"
+PROGRAM_NAME = 'clihw'
+VERSION = 'Dev'
 
-
-################################################################################
-# Generic Functions
-
-def switch(case, cases: dict):
-    cases[case]()
+COMMAND_LIST = ['database', 'edit', 'help', 'list', 'new']
+COMMAND_DESCRIPTION = {
+    'database': 'Manage the database file',
+    'edit': 'Edit an Assignment',
+    'help': 'Print all available commands',
+    'list': 'List all Assignments',
+    'new': 'Create a new Assignment'
+}
 
 
 ################################################################################
 # Primary Functions
 
-def get_action(action_list: list):
-    # Printing
-    for i, action in enumerate(action_list):
-        print("[{}] {}".format(i+1, action))
-    print()
-
-    # Validation
-    user_in = ""
-    while(True):
-        user_in = input("> ")
-        try:
-            user_in = int(user_in)
-            assert 1 <= user_in <= len(action_list)
-            break
-        except (ValueError, AssertionError) as e:
-            print("ERROR: {} is not between {}-{}\n".format(user_in,
-                                                            1,
-                                                            len(action_list)))
-    return user_in
+def print_greeting():
+    title = 'CLI Homework Manager (v. {})'.format(VERSION)
+    print('{}\n{}'.format(title, '~' * len(title)))
+    print_help()
 
 
-def copy_config():
-    print("copy_config()")
-
-
-def main_menu(config_data: dict):
-    print("MAIN MENU")
-    print(config_data)
-
-
-def print_first_timer():
-    print("Welcome to Homework Manager!\n"
-          "It looks like you've never used this program before,\n"
-          "or your configuration files could not be found.\n")
-
-    current_actions = [
-        "Create a new configuration",
-        "Copy an existing configuration",
-        "Quit"
-    ]
-    switch(get_action(current_actions),
-           {
-               1: config.save_new,
-               2: copy_config,
-               3: sys.exit
-           })
-
-
-def init():
-    config_data = config.load()
-    if(len(config_data) == 0):
-        print_first_timer()
+def check_database():
+    db_data = database.load()
+    if not db_data:
+        print('Database file could not be located at ./{}'
+              .format(PROGRAM_NAME, database.DB_FILENAME))
+        if input('Would you like to create a new one? (y/n) ').lower() == 'y':
+            database.save_new()
     else:
-        main_menu(config_data)
+        print('Database file located: ./{}'
+              .format(database.DB_FILENAME))
+        print(db_data)
 
 
-def print_title():
-    title = "Homework Manager (v. {})".format(VERSION)
-    print("{}\n{}\n".format(title, "~" * len(title)))
+def prompt_edit():
+    pass
+
+
+def print_help():
+    print('SYNOPSIS:\n    {} [command]\n'.format(PROGRAM_NAME))
+    print('COMMANDS:')
+    for cmd in COMMAND_LIST:
+        print('    {} - {}'.format(cmd, COMMAND_DESCRIPTION[cmd]))
+
+
+def print_list():
+    db_data = database.load()
+    print(db_data)
+
+
+def prompt_new():
+    pass
+
+
+def print_unknown(cmd):
+    print('{}: Unknown command: '.format(PROGRAM_NAME), end='')
+    if type(cmd) == type(""): # str
+        print('{}'.format(PROGRAM_NAME, cmd))
+    elif type(cmd) == type([]): # list
+        print(*cmd, sep=' ')
+
+
+def parse_args(argv: list):
+    if not argv:
+        print_greeting()
+    elif len(argv) == 1:
+        if argv[0] == 'database':
+            check_database()
+        elif argv[0] == 'edit':
+            prompt_edit()
+        elif argv[0] == 'help':
+            print_help()
+        elif argv[0] == 'list':
+            print_list()
+        elif argv[0] == 'new':
+            prompt_new()
+        else:
+            print_unknown(argv[0])
+    else:
+        print_unknown(argv)
 
 
 ################################################################################
 # Main
 
-if __name__ == "__main__":
-    print_title()
-    init()
+if __name__ == '__main__':
+    parse_args([x.lower() for x in sys.argv[1:]])
