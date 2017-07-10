@@ -2,17 +2,27 @@
 # Imports
 
 import pickle
+from collections import namedtuple
+
+
+################################################################################
+# Data Types
+
+Assignment = namedtuple('Assignment', 'title, course, due_date')
 
 
 ################################################################################
 # Globals
 
 DEFAULT_DB = {
-    'courses': [],
-    'assignments': []
+    'assignments': [],
+    'courses': set(),
+    'settings': {
+        'confirmOnAdd': True
+    }
 }
 
-DB_FILENAME = 'db.hwmngr'
+DB_FILENAME = 'db.hwhkr'
 
 
 ################################################################################

@@ -8,7 +8,7 @@ import database
 ################################################################################
 # Globals
 
-PROGRAM_NAME = 'clihw'
+PROGRAM_NAME = 'hwhack'
 VERSION = 'Dev'
 
 COMMAND_LIST = ['database', 'edit', 'help', 'list', 'new']
@@ -22,25 +22,41 @@ COMMAND_DESCRIPTION = {
 
 
 ################################################################################
+# Generic Functions
+
+def safe_input(prompt: str=''):
+    try:
+        return input(prompt)
+    except EOFError: # User aborted
+        sys.exit()
+
+
+################################################################################
 # Primary Functions
 
 def print_greeting():
-    title = 'CLI Homework Manager (v. {})'.format(VERSION)
+    title = 'Homework Hacker (v. {})'.format(VERSION)
     print('{}\n{}'.format(title, '~' * len(title)))
     print_help()
 
 
-def check_database():
+def check_database(verbose: bool) -> dict:
     db_data = database.load()
+
     if not db_data:
         print('Database file could not be located at ./{}'
-              .format(PROGRAM_NAME, database.DB_FILENAME))
-        if input('Would you like to create a new one? (y/n) ').lower() == 'y':
+              .format(database.DB_FILENAME))
+        if safe_input('Would you like to create a new one? (y/n) ').lower() == 'y':
             database.save_new()
-    else:
+            return database.DEFAULT_DB
+        return {}
+
+    elif verbose:
         print('Database file located: ./{}'
               .format(database.DB_FILENAME))
         print(db_data)
+
+    return db_data
 
 
 def prompt_edit():
@@ -60,7 +76,42 @@ def print_list():
 
 
 def prompt_new():
-    pass
+    db_data = check_database(verbose=False)
+    if db_data:
+        print('NEW ASSIGNMENT:')
+        # Prompt title
+        title = safe_input('    Title: ')
+
+        # Prompt course
+        print('    Course', end='')
+        course_list = sorted(db_data['courses'])
+        for i, course in enumerate(course_list):
+            if i == 0:
+                print('')
+            print('        [{}] {}'.format(i+1, course))
+        course = safe_input('{}: '.format('    ' if course_list else ''))
+        try:
+            index = int(course)
+            assert 1 <= index <= len(course_list)
+            course = course_list[index-1]
+
+        except (ValueError, AssertionError) as e:
+            pass
+
+        # Prompt due date
+        due_date = safe_input('    Due Date: ')
+
+        # Confirm
+        if db_data['settings']['confirmOnAdd']:
+            print('\nCONFIRM:\n    Title: {}\n    Course: {}\n    Due Date: {}\n'
+                  .format(title, course, due_date))
+            if safe_input('(y/n) ').lower() != 'y':
+                return
+
+        # Save
+        db_data['assignments'].append(database.Assignment(title, course, due_date))
+        db_data['courses'].add(course)
+        database.save(db_data)
 
 
 def print_unknown(cmd):
@@ -76,7 +127,7 @@ def parse_args(argv: list):
         print_greeting()
     elif len(argv) == 1:
         if argv[0] == 'database':
-            check_database()
+            check_database(verbose=True)
         elif argv[0] == 'edit':
             prompt_edit()
         elif argv[0] == 'help':
