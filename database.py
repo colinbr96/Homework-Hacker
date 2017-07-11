@@ -1,14 +1,7 @@
 ################################################################################
 # Imports
 
-import pickle
-from collections import namedtuple
-
-
-################################################################################
-# Data Types
-
-Assignment = namedtuple('Assignment', 'title, course, due_date')
+import json
 
 
 ################################################################################
@@ -16,9 +9,8 @@ Assignment = namedtuple('Assignment', 'title, course, due_date')
 
 DEFAULT_DB = {
     'assignments': [],
-    'courses': set(),
     'settings': {
-        'confirmOnAdd': True
+        'confirmOnGlob': True
     }
 }
 
@@ -29,19 +21,19 @@ DB_FILENAME = 'db.hwhkr'
 # Primary Functions
 
 def save_new() -> dict:
-    with open(DB_FILENAME, 'wb') as handle:
-        pickle.dump(DEFAULT_DB, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    with open(DB_FILENAME, 'w') as handle:
+        json.dump(DEFAULT_DB, handle)
     return DEFAULT_DB
 
 
 def save(db_data: dict):
-    with open(DB_FILENAME, 'wb') as handle:
-        pickle.dump(db_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    with open(DB_FILENAME, 'w') as handle:
+        json.dump(db_data, handle)
 
 
 def load() -> dict:
     try:
-        with open(DB_FILENAME, 'rb') as handle:
-            return pickle.load(handle)
+        with open(DB_FILENAME, 'r') as handle:
+            return json.load(handle)
     except FileNotFoundError:
         return {}

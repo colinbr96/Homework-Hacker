@@ -3,6 +3,7 @@
 
 import sys
 import database
+from data_report import DataReport
 
 
 ################################################################################
@@ -40,23 +41,24 @@ def print_greeting():
     print_help()
 
 
-def check_database(verbose: bool) -> dict:
+def check_database(verbose: bool) -> (dict, bool):
     db_data = database.load()
 
     if not db_data:
+        prompted = True
         print('Database file could not be located at ./{}'
               .format(database.DB_FILENAME))
         if safe_input('Would you like to create a new one? (y/n) ').lower() == 'y':
             database.save_new()
-            return database.DEFAULT_DB
-        return {}
+            return (database.DEFAULT_DB, True)
+        return ({}, True)
 
     elif verbose:
         print('Database file located: ./{}'
               .format(database.DB_FILENAME))
         print(db_data)
 
-    return db_data
+    return (db_data, False)
 
 
 def prompt_edit():
@@ -72,29 +74,38 @@ def print_help():
 
 def print_list():
     db_data = database.load()
-    print(db_data)
+    print(DataReport(
+        [('Title', 'title'), ('Course', 'course'), ('Due Date', 'due_date')],
+        db_data['assignments']).ascii_table())
 
 
 def prompt_new():
-    db_data = check_database(verbose=False)
+    db_data, prompted = check_database(verbose=False)
     if db_data:
+        if prompted:
+            print('')
         print('NEW ASSIGNMENT:')
         # Prompt title
         title = safe_input('    Title: ')
 
         # Prompt course
+        course_set = set()
+        for assignment in db_data['assignments']:
+            course_set.add(assignment['course'])
+        course_list = sorted(course_set)
+
         print('    Course', end='')
-        course_list = sorted(db_data['courses'])
         for i, course in enumerate(course_list):
             if i == 0:
                 print('')
             print('        [{}] {}'.format(i+1, course))
         course = safe_input('{}: '.format('    ' if course_list else ''))
+        globbed = False
         try:
             index = int(course)
             assert 1 <= index <= len(course_list)
             course = course_list[index-1]
-
+            globbed = True
         except (ValueError, AssertionError) as e:
             pass
 
@@ -102,15 +113,15 @@ def prompt_new():
         due_date = safe_input('    Due Date: ')
 
         # Confirm
-        if db_data['settings']['confirmOnAdd']:
+        if globbed and db_data['settings']['confirmOnGlob']:
             print('\nCONFIRM:\n    Title: {}\n    Course: {}\n    Due Date: {}\n'
                   .format(title, course, due_date))
             if safe_input('(y/n) ').lower() != 'y':
                 return
 
         # Save
-        db_data['assignments'].append(database.Assignment(title, course, due_date))
-        db_data['courses'].add(course)
+        db_data['assignments'].append(
+            {'title': title, 'course': course, 'due_date': due_date})
         database.save(db_data)
 
 
