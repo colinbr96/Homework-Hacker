@@ -46,7 +46,7 @@ def check_database(verbose: bool) -> (dict, bool):
 
     if not db_data:
         prompted = True
-        print('Database file could not be located at ./{}'
+        print('Database file could not be located at {}'
               .format(database.DB_FILENAME))
         if safe_input('Would you like to create a new one? (y/n) ').lower() == 'y':
             database.save_new()
@@ -54,7 +54,7 @@ def check_database(verbose: bool) -> (dict, bool):
         return ({}, True)
 
     elif verbose:
-        print('Database file located: ./{}'
+        print('Database file located: {}'
               .format(database.DB_FILENAME))
         print(db_data)
 

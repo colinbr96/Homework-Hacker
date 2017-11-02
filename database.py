@@ -2,6 +2,7 @@
 # Imports
 
 import json
+from os.path import expanduser
 
 
 ################################################################################
@@ -14,7 +15,7 @@ DEFAULT_DB = {
     }
 }
 
-DB_FILENAME = 'db.hwhkr'
+DB_FILENAME = expanduser('~/.db.hwhkr')
 
 
 ################################################################################
